@@ -33,6 +33,11 @@ Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
+Enemy.prototype.reset = function(position) {
+	this.y = position;
+	this.x = -100;
+}
+
 // Now write your own player class
 // This class requires an update(), render() and
 // a handleInput() method.
@@ -40,10 +45,13 @@ Enemy.prototype.render = function() {
 var playerX = 200;
 var playerY = 475;
 var Player = function (posX, posY, player) {
+	this.score = 0;
     this.x = posX;
     this.y = posY;
     this.sprite = 'images/'+player+'.png';
 };
+
+
 
 Player.prototype.reset = function() {
     this.x = 300;
@@ -129,12 +137,3 @@ document.addEventListener('keyup', function(e) {
 
     player.handleInput(allowedKeys[e.keyCode]);
 });
-
-var checkCollisions = function() {
-    allEnemies.forEach(function(enemy) {
-        if (player.y == enemy.y && ((player.x > enemy.x && player.x < (enemy.x+81)) || ((player.x+81) < (enemy.x+81) && (player.x+81) > enemy.x))) {
-            alert ("colision");
-            player.reset();
-        }
-    });
-}

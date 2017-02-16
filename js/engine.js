@@ -24,7 +24,7 @@
      canvas = doc.createElement('canvas'),
      ctx = canvas.getContext('2d'),
      lastTime;
-
+	var record;
      canvas.width = 707;
      canvas.height = 707;
      doc.body.appendChild(canvas);
@@ -46,6 +46,11 @@
         /* Call our update/render functions, pass along the time delta to
         * our update function since it may be used for smooth animation.
         */
+		
+		if (playerSelected == false) {
+			return;
+		}
+		checkRecord();
         update(dt);
         render();
 
@@ -68,7 +73,8 @@
     * game loop.
     */
     function init() {
-        reset();
+        //reset();
+		console.log("aqui");
         lastTime = Date.now();
         render();
         //main();
@@ -86,6 +92,7 @@
     function update(dt) {
         updateEntities(dt);
         checkCollisions();
+		checkVictory();
     }
 
     /* This is called by the update function and loops through all of the
@@ -151,24 +158,14 @@
     var playerSelected = false;
     var rect = canvas.getBoundingClientRect();
 
-
     canvas.addEventListener('click', function() {
         x = event.clientX - rect.left;
         y = event.clientY - rect.top;
         if(playerSelected == false && y >550 && x>100 && x <600){
-            updateUnselect();
             select();
             main();
         }
     });
-
-    function updateUnselect() {
-        players.forEach(function(prePlayer) {
-            prePlayer.x = prePlayer.x + 600;
-            prePlayer.render();
-        });
-
-    }
 
     function select() {
         if (x>100 && x<200){
@@ -188,7 +185,7 @@
         }
         playerSelected = true;
         player.x = 300;
-        player.render;
+        player.render();;
     }
 
     /* This function is called by the render function and is called on each game
@@ -203,10 +200,6 @@
             enemy.render();
         });
 
-        players.forEach(function(prePlayer) {
-            prePlayer.render();
-        });
-
         if(playerSelected == false){
             ctx.font = "50px Arial";
             ctx.textAlign = "center";
@@ -216,17 +209,90 @@
 
             ctx.fillStyle = "white";
             ctx.fillText("Choose your hero!", 400, 300);
-        }
-
+			players.forEach(function(prePlayer) {
+				prePlayer.render();
+				console.log("teste");
+        });
+        } else {
+			
+			 player.render();
+		}
+		ctx.font = "50px Arial";
+        ctx.textAlign = "center";
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 3;
+        ctx.strokeText("Score: "+player.score, 600, 100);
+		ctx.fillStyle = "white";
+        ctx.fillText("Score: "+player.score, 600, 100);
+		ctx.strokeStyle = "black";
+        ctx.lineWidth = 3;
+        ctx.strokeText("Record: "+record, 300, 100);
+		ctx.fillStyle = "white";
+        ctx.fillText("Record: "+record, 300, 100);
     }
 
-    /* This function does nothing but it could have been a good place to
+	var checkRecord = function() {
+		if (window.localStorage.getItem('record')) {
+			record = window.localStorage.getItem('record');
+		} 
+		else {
+			record = 0;
+		}			
+		if (player.score > record) {
+			window.localStorage.setItem('record', player.score)	
+		}
+	}
+    var checkVictory = function() {
+			if (player.y < 60) {
+				alert("Victory!");
+				player.reset();
+				player.score++;
+				console.log(player.score+"score");
+			}
+	}
+	
+	var checkCollisions = function() {
+    allEnemies.forEach(function(enemy) {
+        if (player.y == enemy.y && ((player.x > enemy.x && player.x < (enemy.x+81)) || ((player.x+81) < (enemy.x+81) && (player.x+81) > enemy.x))) {
+            alert ("colision");
+            player.reset();
+        }
+    });
+}
+	
+	/* This function does nothing but it could have been a good place to
     * handle game reset states - maybe a new game menu or a game over screen
     * those sorts of things. It's only called once by the init() method.
     */
+	document.addEventListener('keyup', function(e) {
+    var allowedKeys = {
+        113: 'f2'
+    };
+
+    if (allowedKeys[e.keyCode] == "f2") {
+		reset();
+	}
+	});
+	
     function reset() {
-        // noop
-    }
+		player.score = 0;
+		var positionY = 60;
+		var positionX = 100;
+		playerSelected = false;
+		players.forEach(function(prePlayer) {
+				prePlayer.x = positionX;
+				positionX += 100;
+        });
+		allEnemies.forEach(function(enemy) {
+            enemy.y = positionY;
+			enemy.x = -100;
+			positionY += 83;
+        });
+		init();
+	};
+
+	
+    
 
     /* Go ahead and load all of the images we know we're going to need to
     * draw our game level. Then set init as the callback method, so that when
