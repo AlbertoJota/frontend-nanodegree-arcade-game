@@ -4,9 +4,7 @@ var Enemy = function(enemyX, enemyY) {
     this.x = enemyX;
     this.y = enemyY;
     this.speeds = [100, 120, 140, 160, 180, 200, 220, 240, 260, 280];
-    this.speedSelector = Math.round(Math.random()*9);
-    console.log(this.speedSelector);
-    this.speed = this.speeds[this.speedSelector];
+    this.speed = this.selectSpeed();
 	// we've provided one for you to get started
 	// The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
@@ -15,16 +13,20 @@ var Enemy = function(enemyX, enemyY) {
 
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
+
+Enemy.prototype.selectSpeed = function () {
+	this.speedSelector = Math.round(Math.random()*9);
+    return this.speeds[this.speedSelector];
+}
+
 Enemy.prototype.update = function(dt) {
     // You should multiply any movement by the dt parameter
     // which will ensure the game runs at the same speed for
     // all computers.
     this.x += this.speed * dt;
-    if(this.x > 700) {
+    if(this.x > 500) {
         this.x = -101;
-        this.speedSelector = Math.round(Math.random()*9);
-        console.log(this.speedSelector);
-        this.speed = this.speeds[this.speedSelector];
+		this.speed = this.selectSpeed();        
     }
 };
 
@@ -42,9 +44,8 @@ Enemy.prototype.reset = function(position) {
 // This class requires an update(), render() and
 // a handleInput() method.
 
-var playerX = 200;
-var playerY = 475;
 var Player = function (posX, posY, player) {
+	this.heal = 2;
 	this.score = 0;
     this.x = posX;
     this.y = posY;
@@ -62,11 +63,12 @@ Player.prototype.update = function(dt) {
     // You should multiply any movement by the dt parameter
     // which will ensure the game runs at the same speed for
     // all computers.
+	
     if(this.x < 0){
         this.x = 0;
     }
-    else if(this.x >600){
-        this.x = 600;
+    else if(this.x >400){
+        this.x = 400;
     }
     else if(this.y < 0){
         this.y = 0;
@@ -74,13 +76,17 @@ Player.prototype.update = function(dt) {
     else if(this.y > 475){
         this.y = 475;
     }
+	
 };
 
 Player.prototype.render = function(dt) {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+	
 };
+
 Player.prototype.handleInput = function(key) {
-    switch (key) {
+    if (gameOver == false) {
+	switch (key) {
         case "left":
         this.x = this.x-100
         break;
@@ -97,7 +103,18 @@ Player.prototype.handleInput = function(key) {
         this.y = this.y+83;
         break;
     }
+	}
+};
 
+var Selector = function () {
+	this.x = 300;
+    this.y = 475;
+    this.sprite = 'images/Selector.png';
+};
+
+Selector.prototype.render = function(dt) {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+	
 };
 
 
@@ -105,11 +122,11 @@ Player.prototype.handleInput = function(key) {
 
 var player;
 
-var player1 = new Player(100, 475, "char-boy");
-var player2 = new Player(200, 475, "char-horn-girl");
-var player3 = new Player(300, 475, "char-pink-girl");
-var player4 = new Player(400, 475, "char-cat-girl");
-var player5 = new Player(500, 475, "char-princess-girl");
+var player1 = new Player(0, 475, "char-boy");
+var player2 = new Player(0, 475, "char-horn-girl");
+var player3 = new Player(0, 475, "char-pink-girl");
+var player4 = new Player(0, 475, "char-cat-girl");
+var player5 = new Player(0, 475, "char-princess-girl");
 
 var players = [player1, player2, player3, player4, player5];
 
@@ -137,3 +154,4 @@ document.addEventListener('keyup', function(e) {
 
     player.handleInput(allowedKeys[e.keyCode]);
 });
+

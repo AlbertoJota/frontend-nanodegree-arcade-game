@@ -13,22 +13,40 @@
  * the canvas' context (ctx) object globally available to make writing app.js
  * a little simpler to work with.
  */
+var gameOver = false; 
+var x;
+var y;
+var playerSelected = false; 
+var score;
+var record;
+
+var getRecord = function () {
+	if (window.localStorage.getItem('record')) {
+			record = window.localStorage.getItem('record');
+		} 
+		else {
+			record = 0;
+		}
+}
+
 
  var Engine = (function(global) {
     /* Predefine the variables we'll be using within this scope,
      * create the canvas element, grab the 2D context for that canvas
      * set the canvas elements height/width and add it to the DOM.
      */
+	 
      var doc = global.document,
      win = global.window,
      canvas = doc.createElement('canvas'),
      ctx = canvas.getContext('2d'),
      lastTime;
-	var record;
-     canvas.width = 707;
+	
+	
+     canvas.width = 505;
      canvas.height = 707;
      doc.body.appendChild(canvas);
-
+	 getRecord();
     /* This function serves as the kickoff point for the game loop itself
     * and handles properly calling the update and render methods.
     */
@@ -47,37 +65,32 @@
         * our update function since it may be used for smooth animation.
         */
 		
-		if (playerSelected == false) {
-			return;
-		}
-		checkRecord();
-        update(dt);
-        render();
+		
+			
+			update(dt);
+			render();
+			checkHeal();
 
+			/* Set our lastTime variable which is used to determine the time delta
+			* for the next time this function is called.
+			*/
+			lastTime = now;
 
+			/* Use the browser's requestAnimationFrame function to call this
+			* function again as soon as the browser is able to draw another frame.
+			*/
 
-        /* Set our lastTime variable which is used to determine the time delta
-        * for the next time this function is called.
-        */
-        lastTime = now;
-
-        /* Use the browser's requestAnimationFrame function to call this
-        * function again as soon as the browser is able to draw another frame.
-        */
-
-        win.requestAnimationFrame(main);
-    }
+			win.requestAnimationFrame(main);
+		
+	}
 
     /* This function does some initial setup that should only occur once,
     * particularly setting the lastTime variable that is required for the
     * game loop.
     */
     function init() {
-        //reset();
-		console.log("aqui");
         lastTime = Date.now();
         render();
-        //main();
     }
 
     /* This function is called by main (our game loop) and itself calls all
@@ -90,9 +103,11 @@
     * on the entities themselves within your app.js file).
     */
     function update(dt) {
-        updateEntities(dt);
+        if (gameOver == false && playerSelected == true) {
+		updateEntities(dt);
         checkCollisions();
 		checkVictory();
+		}
     }
 
     /* This is called by the update function and loops through all of the
@@ -104,11 +119,12 @@
     */
 
     function updateEntities(dt) {
-        allEnemies.forEach(function(enemy) {
-            enemy.update(dt);
-        });
-        player.update();
-    }
+		
+			allEnemies.forEach(function(enemy) {
+				enemy.update(dt);
+			});
+			player.update();
+		    }
 
     /* This function initially draws the "game level", it will then call
     * the renderEntities function. Remember, this function is called every
@@ -131,7 +147,7 @@
             'images/grass-block.png'    // Row 2 of 2 of grass
             ],
             numRows = 7,
-            numCols = 7,
+            numCols = 5,
             row, col;
 
         /* Loop through the number of rows and columns we've defined above
@@ -152,42 +168,78 @@
         }
 
         renderEntities();
+		writeMenu();
+		
     }
-    var x;
-    var y;
-    var playerSelected = false;
+    
     var rect = canvas.getBoundingClientRect();
 
     canvas.addEventListener('click', function() {
         x = event.clientX - rect.left;
         y = event.clientY - rect.top;
-        if(playerSelected == false && y >550 && x>100 && x <600){
-            select();
+        if(playerSelected == false && y >550 && x>0 && x <500){
+			select();
             main();
         }
     });
 
     function select() {
-        if (x>100 && x<200){
+        if (x>0 && x<100){
             player = player1;
         }
-        else if (x>=200 && x<300) {
+        else if (x>=100 && x<200) {
             player = player2;
         }
-        else if (x>=300 && x<400) {
+        else if (x>=200 && x<300) {
             player = player3;
         }
-        else if (x>=400 && x<500) {
+        else if (x>=300 && x<400) {
             player = player4;
         }
-        else if (x>=500 && x<600) {
+        else if (x>=400 && x<500) {
             player = player5;
         }
+		reset();
         playerSelected = true;
-        player.x = 300;
-        player.render();;
+        player.x = 200;
+        		
     }
-
+	
+	function writeMenu () {
+		if(playerSelected == false){
+            ctx.font = "50px Arial";
+            ctx.textAlign = "center";
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 3;
+            ctx.strokeText("Choose your hero!", 252, 300);
+			
+            ctx.fillStyle = "white";
+            ctx.fillText("Choose your hero!", 252, 300);
+			players.forEach(function(prePlayer) {
+				prePlayer.render();
+        });
+        } 
+			if (player) {
+				score = player.score;
+			}
+			else {
+				score = 0;
+			}
+			 //player.render();
+			ctx.font = "50px Arial";
+			ctx.textAlign = "center";
+			ctx.strokeStyle = "black";
+			ctx.lineWidth = 3;
+			ctx.strokeText("Score: "+score, 400, 100);
+			ctx.fillStyle = "white";
+			ctx.fillText("Score: "+score, 400, 100);
+			ctx.strokeStyle = "black";
+			ctx.lineWidth = 3;
+			ctx.strokeText("Record: "+record, 120, 100);
+			ctx.fillStyle = "white";
+			ctx.fillText("Record: "+record, 120, 100);
+			
+	}
     /* This function is called by the render function and is called on each game
     * tick. Its purpose is to then call the render functions you have defined
     * on your enemy and player entities within app.js
@@ -196,96 +248,101 @@
         /* Loop through all of the objects within the allEnemies array and call
         * the render function you have defined.
         */
-        allEnemies.forEach(function(enemy) {
-            enemy.render();
-        });
-
-        if(playerSelected == false){
-            ctx.font = "50px Arial";
+       
+		if (playerSelected == true) {
+			allEnemies.forEach(function(enemy) {
+				enemy.render();
+			});
+			player.render();
+		} else{
+			var positionY = 60;
+			var positionX = 0;
+			allEnemies.forEach(function(enemy) {
+				enemy.reset(positionY);
+				positionY += 83;
+			});
+			players.forEach(function(prePlayer) {
+				prePlayer.x = positionX;
+				positionX += 100;
+			});
+		}
+    }
+	
+	var checkHeal = function () {
+		if(player.heal ==0){
+			ctx.font = "50px Arial";
             ctx.textAlign = "center";
             ctx.strokeStyle = "black";
             ctx.lineWidth = 3;
-            ctx.strokeText("Choose your hero!", 400, 300);
+            ctx.strokeText("Game Over!", 252, 300);
+			ctx.strokeText("F2 for new game!", 252, 400);
 
             ctx.fillStyle = "white";
-            ctx.fillText("Choose your hero!", 400, 300);
-			players.forEach(function(prePlayer) {
-				prePlayer.render();
-				console.log("teste");
-        });
-        } else {
-			
-			 player.render();
-		}
-		ctx.font = "50px Arial";
-        ctx.textAlign = "center";
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 3;
-        ctx.strokeText("Score: "+player.score, 600, 100);
-		ctx.fillStyle = "white";
-        ctx.fillText("Score: "+player.score, 600, 100);
-		ctx.strokeStyle = "black";
-        ctx.lineWidth = 3;
-        ctx.strokeText("Record: "+record, 300, 100);
-		ctx.fillStyle = "white";
-        ctx.fillText("Record: "+record, 300, 100);
-    }
-
-	var checkRecord = function() {
-		if (window.localStorage.getItem('record')) {
-			record = window.localStorage.getItem('record');
-		} 
-		else {
-			record = 0;
-		}			
-		if (player.score > record) {
-			window.localStorage.setItem('record', player.score)	
+            ctx.fillText("Game Over!", 252, 300);
+			ctx.fillText("F2 for new game!", 252, 400);
+			checkRecord();
+			gameOver = true;
 		}
 	}
+	
+	var checkRecord = function() {		
+		if (player.score > record) {
+			record = player.score;
+			window.localStorage.setItem('record', record);
+			alert("You broke the record! Congrulations!")
+		}
+	}
+	
     var checkVictory = function() {
 			if (player.y < 60) {
 				alert("Victory!");
+				var positionY = 60;
+			allEnemies.forEach(function(enemy) {
+				enemy.reset(positionY);
+				positionY += 83;
+			});
 				player.reset();
 				player.score++;
-				console.log(player.score+"score");
 			}
 	}
 	
 	var checkCollisions = function() {
-    allEnemies.forEach(function(enemy) {
-        if (player.y == enemy.y && ((player.x > enemy.x && player.x < (enemy.x+81)) || ((player.x+81) < (enemy.x+81) && (player.x+81) > enemy.x))) {
-            alert ("colision");
-            player.reset();
-        }
-    });
-}
+		allEnemies.forEach(function(enemy) {
+			if (player.y == enemy.y && ((player.x > enemy.x && player.x < (enemy.x+81)) || ((player.x+81) < (enemy.x+81) && (player.x+81) > enemy.x))) {
+				alert ("colision");
+				var positionY = 60;
+				allEnemies.forEach(function(enemy) {
+					enemy.reset(positionY);
+					positionY += 83;
+				});
+				player.heal -= 1;
+				console.log(player.heal);
+				player.reset();
+			}
+		});
+	}
 	
 	/* This function does nothing but it could have been a good place to
     * handle game reset states - maybe a new game menu or a game over screen
     * those sorts of things. It's only called once by the init() method.
     */
 	document.addEventListener('keyup', function(e) {
-    var allowedKeys = {
-        113: 'f2'
-    };
-
-    if (allowedKeys[e.keyCode] == "f2") {
-		reset();
-	}
+		var allowedKeys = {
+			113: 'f2'
+		};
+		if (allowedKeys[e.keyCode] == "f2") {
+			reset();
+		}
 	});
 	
     function reset() {
+		gameOver = false;
+		player.heal = 2;
 		player.score = 0;
 		var positionY = 60;
-		var positionX = 100;
 		playerSelected = false;
-		players.forEach(function(prePlayer) {
-				prePlayer.x = positionX;
-				positionX += 100;
-        });
 		allEnemies.forEach(function(enemy) {
-            enemy.y = positionY;
-			enemy.x = -100;
+            enemy.reset(positionY);
 			positionY += 83;
         });
 		init();
@@ -308,6 +365,7 @@
         'images/char-horn-girl.png',
         'images/char-pink-girl.png',
         'images/char-princess-girl.png',
+		'images/Selector.png',
         'images/GemBlue.png'
         ]);
     Resources.onReady(init);
