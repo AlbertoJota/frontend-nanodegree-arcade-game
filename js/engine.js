@@ -13,41 +13,28 @@
 * the canvas' context (ctx) object globally available to make writing app.js
 * a little simpler to work with.
 */
-var gameOver = false;
-var x;
-var y;
-
-var score;
-var record;
-var pause = false;
-
-
-
 
 var Engine = (function(global) {
 /* Predefine the variables we'll be using within this scope,
 * create the canvas element, grab the 2D context for that canvas
 * set the canvas elements height/width and add it to the DOM.
 */
-var getRecord = function () {
-    if (window.localStorage.getItem('record')) {
-        record = window.localStorage.getItem('record');
-    }
-    else {
-        record = 0;
-    }
-}
+
 var doc = global.document,
 win = global.window,
 canvas = doc.createElement('canvas'),
 ctx = canvas.getContext('2d'),
 lastTime;
 
+status = "selectPlayer",
+x = "",
+y = "",
+record = "";
 
 canvas.width = 505;
 canvas.height = 707;
 doc.body.appendChild(canvas);
-getRecord();
+
 /* This function serves as the kickoff point for the game loop itself
 * and handles properly calling the update and render methods.
 */
@@ -67,7 +54,7 @@ dt = (now - lastTime) / 1000.0;
 */
 
 
-
+getRecord();
 update(dt);
 check();
 render();
@@ -122,8 +109,8 @@ function check() {
 */
 
 function updateEntities(dt) {
-    if (gameOver == false && playerSelected == true) {
-        allEnemies.forEach(function(enemy) {
+    if (status == "onGame") {
+		allEnemies.forEach(function(enemy) {
             enemy.update(dt);
         });
     }
@@ -173,11 +160,13 @@ ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
 }
 
 renderEntities();
-if(playerSelected == false){
+
+if (status == "selectPlayer") {
     renderChoose();
     selector.render();
     renderPrePlayers();
 }
+
 renderInformation();
 
 }
@@ -186,11 +175,11 @@ var rect = canvas.getBoundingClientRect();
 
 document.addEventListener('keyup', function(e) {
     var key = event.keyCode;
-    if (key == 32) {
+    if (status == "selectPlayer" && key == 32) {
         x = selector.x;
         player.select(x);
         reset();
-        playerSelected = true;
+        status = "onGame";
         player.x = 200;
     }
 });
@@ -198,26 +187,21 @@ document.addEventListener('keyup', function(e) {
 canvas.addEventListener('click', function() {
     x = event.clientX - rect.left;
     y = event.clientY - rect.top;
-    if(playerSelected == false && y >550 && x>0 && x <500){
-        player.select(x);
+    if (status == "selectPlayer" && y > 550 && y < 633&& x > 0 && x < 500) {
+		player.select(x);
         reset();
-        playerSelected = true;
+        status = "onGame";
         player.x = 200;
-
     }
 });
 
 canvas.addEventListener('mousemove', function() {
     x = event.clientX - rect.left;
     y = event.clientY - rect.top;
-    if(playerSelected == false && y >550 && x>0 && x <500){
+    if(status == "selectPlayer" && y >550 && x>0 && x <500){
         selector.select(x);
-        //reset();
     }
 });
-
-
-
 
 var renderPrePlayers = function() {
     players.forEach(function(prePlayer) {
@@ -231,7 +215,6 @@ var renderChoose = function() {
     ctx.strokeStyle = "black";
     ctx.lineWidth = 3;
     ctx.strokeText("Choose your hero!", 252, 300);
-
     ctx.fillStyle = "white";
     ctx.fillText("Choose your hero!", 252, 300);
 }
@@ -279,16 +262,17 @@ function renderEntities() {
 * the render function you have defined.
 */
 
-if (playerSelected == true && pause == false) {
+//if (playerSelected == true && pause == false) {
+if (status == "onGame") {
     allEnemies.forEach(function(enemy) {
         enemy.render();
     });
     player.render();
-} else {
+} else if (status == "selectPlayer") {
     var positionY = 60;
     var positionX = 0;
     allEnemies.forEach(function(enemy) {
-        enemy.reset(positionY);
+        enemy.revive(positionY);
         positionY += 83;
     });
     players.forEach(function(prePlayer) {
@@ -305,7 +289,17 @@ var checkHeal = function () {
     if(player.heal ==0){
         renderGameOver();
         checkRecord();
-        gameOver = true;
+        status = "gameOver";
+		//gameOver = true;
+    }
+}
+
+var getRecord = function () {
+    if (window.localStorage.getItem('record')) {
+        record = window.localStorage.getItem('record');
+    }
+    else {
+        record = 0;
     }
 }
 
@@ -322,10 +316,10 @@ var checkVictory = function() {
         alert("Victory!");
         var positionY = 60;
         allEnemies.forEach(function(enemy) {
-            enemy.reset(positionY);
+            enemy.revive(positionY);
             positionY += 83;
         });
-        player.reset();
+        player.revive();
         player.score++;
     }
 }
@@ -336,12 +330,11 @@ var checkCollisions = function() {
             alert ("colision");
             var positionY = 60;
             allEnemies.forEach(function(enemy) {
-                enemy.reset(positionY);
+                enemy.revive(positionY);
                 positionY += 83;
             });
             player.heal -= 1;
-            console.log(player.heal);
-            player.reset();
+            player.revive();
         }
     });
 }
@@ -360,16 +353,14 @@ document.addEventListener('keyup', function(e) {
 });
 
 function reset() {
-    gameOver = false;
-    player.heal = 2;
-    player.score = 0;
+	status = "selectPlayer";
+    player.reset();
+	selector.reset();
     var positionY = 60;
-    playerSelected = false;
     allEnemies.forEach(function(enemy) {
-        enemy.reset(positionY);
+        enemy.revive(positionY);
         positionY += 83;
     });
-    init();
 };
 
 

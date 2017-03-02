@@ -1,8 +1,6 @@
-var playerSelected = false;
 var speeds = [100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320,+
 340, 360, 400, 420, 440, 460];
 var player;
-
 // Enemies our player must avoid
 var Enemy = function(enemyX, enemyY) {
 // Variables applied to each of our instances go here,
@@ -28,7 +26,7 @@ Enemy.prototype.update = function(dt) {
 // which will ensure the game runs at the same speed for
 // all computers.
 this.x += this.speed * dt;
-if(this.x > 500) {
+if(this.x > 800) {
     this.x = -101;
     this.speed = this.selectSpeed();
 }
@@ -39,7 +37,7 @@ Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-Enemy.prototype.reset = function(position) {
+Enemy.prototype.revive = function(position) {
     this.y = position;
     this.x = -100;
 }
@@ -57,9 +55,12 @@ var Player = function (posX, posY, player) {
     this.sprite = 'images/'+player+'.png';
 };
 
-
-
 Player.prototype.reset = function() {
+    player.heal = 2;
+    player.score = 0;
+}
+
+Player.prototype.revive = function() {
     this.x = 200;
     this.y = 475;
 }
@@ -102,14 +103,13 @@ else if(this.y > 475){
 
 };
 
-Player.prototype.render = function(dt) {
+Player.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 
 };
 
 Player.prototype.handleInput = function(key) {
-    if (gameOver == false) {
-        switch (key) {
+		switch (key) {
             case "left":
             this.x = this.x-100
             break;
@@ -126,7 +126,6 @@ Player.prototype.handleInput = function(key) {
             this.y = this.y+83;
             break;
         }
-    }
 };
 
 var Selector = function () {
@@ -135,7 +134,7 @@ var Selector = function () {
     this.sprite = 'images/Selector.png';
 };
 
-Selector.prototype.render = function(dt) {
+Selector.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 
 };
@@ -188,6 +187,10 @@ Selector.prototype.update = function(dt) {
     }
 };
 
+Selector.prototype.reset = function() {
+	this.x = 200;
+};
+
 // Now instantiate your objects.
 
 
@@ -223,9 +226,9 @@ document.addEventListener('keyup', function(e) {
         40: 'down',
         32: 'space'
     };
-    if(playerSelected == true) {
+    if(status == "onGame") {
         player.handleInput(allowedKeys[e.keyCode]);
-    } else {
+    } else if (status == "selectPlayer"){
         selector.handleInput(allowedKeys[e.keyCode]);
     }
 });
