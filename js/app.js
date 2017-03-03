@@ -81,6 +81,9 @@ Player.prototype.select = function(x) {
     else if (x>=400 && x<500) {
         player = player5;
     }
+	reset();
+    status = "onGame";
+    player.x = 200;
 }
 
 Player.prototype.update = function(dt) {
@@ -151,7 +154,11 @@ Selector.prototype.handleInput = function(key) {
         break;
 
         case "space":
-        player = player3;
+        x = selector.x;
+        player.select(x);
+        reset();
+        status = "onGame";
+        player.x = 200;
         break;
     }
 
@@ -224,8 +231,12 @@ document.addEventListener('keyup', function(e) {
         38: 'up',
         39: 'right',
         40: 'down',
-        32: 'space'
+        32: 'space',
+		113: 'f2'
     };
+	if (allowedKeys[e.keyCode] == "f2") {
+        reset();
+    }
     if(status == "onGame") {
         player.handleInput(allowedKeys[e.keyCode]);
     } else if (status == "selectPlayer"){
@@ -233,3 +244,21 @@ document.addEventListener('keyup', function(e) {
     }
 });
 
+
+rect = canvas.getBoundingClientRect();
+
+document.addEventListener('click', function() {
+    x = event.clientX - rect.left;
+    y = event.clientY - rect.top;
+    if (status == "selectPlayer" && y > 550 && y < 633&& x > 0 && x < 500) {
+		player.select(x);
+    }
+});
+
+document.addEventListener('mousemove', function() {
+    x = event.clientX - rect.left;
+    y = event.clientY - rect.top;
+    if(status == "selectPlayer" && y >550 && x>0 && x <500){
+        selector.select(x);
+    }
+});

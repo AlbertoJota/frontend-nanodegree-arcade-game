@@ -22,14 +22,14 @@ var Engine = (function(global) {
 
 var doc = global.document,
 win = global.window,
-canvas = doc.createElement('canvas'),
-ctx = canvas.getContext('2d'),
 lastTime;
 
+canvas = doc.createElement('canvas'),
+ctx = canvas.getContext('2d'),
 status = "selectPlayer",
-x = "",
-y = "",
 record = "";
+playerRecord = "";
+
 
 canvas.width = 505;
 canvas.height = 707;
@@ -58,7 +58,7 @@ getRecord();
 update(dt);
 check();
 render();
-checkHeal();
+
 
 /* Set our lastTime variable which is used to determine the time delta
 * for the next time this function is called.
@@ -99,6 +99,7 @@ function update(dt) {
 function check() {
     checkCollisions();
     checkVictory();
+	checkHeal();
 }
 /* This is called by the update function and loops through all of the
 * objects within your allEnemies array as defined in app.js and calls
@@ -109,13 +110,16 @@ function check() {
 */
 
 function updateEntities(dt) {
+	
     if (status == "onGame") {
 		allEnemies.forEach(function(enemy) {
             enemy.update(dt);
         });
+		player.update();
     }
-    player.update();
-    selector.update();
+	else if (status == "selectPlayer") {
+		selector.update();
+	}
 }
 
 /* This function initially draws the "game level", it will then call
@@ -160,52 +164,36 @@ ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
 }
 
 renderEntities();
-
-if (status == "selectPlayer") {
-    renderChoose();
-    selector.render();
-    renderPrePlayers();
-}
-
-renderInformation();
+renderText();
 
 }
-
-var rect = canvas.getBoundingClientRect();
-
-document.addEventListener('keyup', function(e) {
-    var key = event.keyCode;
-    if (status == "selectPlayer" && key == 32) {
-        x = selector.x;
-        player.select(x);
-        reset();
-        status = "onGame";
-        player.x = 200;
-    }
-});
-
-canvas.addEventListener('click', function() {
-    x = event.clientX - rect.left;
-    y = event.clientY - rect.top;
-    if (status == "selectPlayer" && y > 550 && y < 633&& x > 0 && x < 500) {
-		player.select(x);
-        reset();
-        status = "onGame";
-        player.x = 200;
-    }
-});
-
-canvas.addEventListener('mousemove', function() {
-    x = event.clientX - rect.left;
-    y = event.clientY - rect.top;
-    if(status == "selectPlayer" && y >550 && x>0 && x <500){
-        selector.select(x);
-    }
-});
+ 
+var renderText = function () {
+	renderInformation();
+	if (status == "selectPlayer") {
+		renderChoose();    
+	}
+	else if (status == "onGame") {
+		renderScore();
+	}
+	else if (status == "gameOver") {
+		renderGameOver();
+	}
+}
 
 var renderPrePlayers = function() {
+	var positionX = 0;
+	selector.render();
     players.forEach(function(prePlayer) {
+		prePlayer.x = positionX;
         prePlayer.render();
+		positionX += 100;
+    });
+}
+
+var renderEnemy = function () {
+	allEnemies.forEach(function(enemy) {
+        enemy.render();
     });
 }
 
@@ -220,24 +208,43 @@ var renderChoose = function() {
 }
 
 var renderInformation = function () {
-    if (player) {
-        score = player.score;
-    }
-    else {
-        score = 0;
-    }
-    ctx.font = "50px Arial";
+        
+    ctx.font = "25px Arial";
+	ctx.textAlign = "left";
+	ctx.strokeStyle = "black";
+    ctx.lineWidth = 3;
+    ctx.strokeText("Record: "+record, 0, 75);
+    ctx.fillStyle = "white";
+    ctx.fillText("Record: "+record, 0, 75);
+	ctx.strokeStyle = "black";
+    ctx.lineWidth = 3;
+    ctx.strokeText("Player: "+playerRecord, 0, 100);
+    ctx.fillStyle = "white";
+    ctx.fillText("Player: "+playerRecord, 0, 100);
+	ctx.strokeStyle = "black";
+    ctx.lineWidth = 3;
+    ctx.strokeText("Player: "+playerRecord, 0, 100);
+    ctx.fillStyle = "white";
+    ctx.fillText("Player: "+playerRecord, 0, 100);
+}
+
+var renderScore = function () {
+	score = player.score;
+	life = player.heal;
+	ctx.font = "50px Arial";
     ctx.textAlign = "center";
     ctx.strokeStyle = "black";
     ctx.lineWidth = 3;
     ctx.strokeText("Score: "+score, 400, 100);
     ctx.fillStyle = "white";
     ctx.fillText("Score: "+score, 400, 100);
+	ctx.font = "25px Arial";
+    ctx.textAlign = "left";
     ctx.strokeStyle = "black";
     ctx.lineWidth = 3;
-    ctx.strokeText("Record: "+record, 120, 100);
+    ctx.strokeText("Lifes: "+life, 0, 650);
     ctx.fillStyle = "white";
-    ctx.fillText("Record: "+record, 120, 100);
+    ctx.fillText("Lifes: "+life, 0, 650);
 }
 
 var renderGameOver = function () {
@@ -246,60 +253,55 @@ var renderGameOver = function () {
     ctx.strokeStyle = "black";
     ctx.lineWidth = 3;
     ctx.strokeText("Game Over!", 252, 300);
+	ctx.strokeText("Your Score is: "+ player.score, 252, 350);
     ctx.strokeText("F2 for new game!", 252, 400);
 
     ctx.fillStyle = "white";
     ctx.fillText("Game Over!", 252, 300);
-    ctx.fillText("F2 for new game!", 252, 400);
+    ctx.fillText("Your Score is: "+ player.score, 252, 350);
+	ctx.fillText("F2 for new game!", 252, 400);
 }
 
 /* This function is called by the render function and is called on each game
 * tick. Its purpose is to then call the render functions you have defined
 * on your enemy and player entities within app.js
 */
-function renderEntities() {
-/* Loop through all of the objects within the allEnemies array and call
-* the render function you have defined.
-*/
-
-//if (playerSelected == true && pause == false) {
-if (status == "onGame") {
-    allEnemies.forEach(function(enemy) {
-        enemy.render();
-    });
-    player.render();
-} else if (status == "selectPlayer") {
-    var positionY = 60;
-    var positionX = 0;
-    allEnemies.forEach(function(enemy) {
-        enemy.revive(positionY);
-        positionY += 83;
-    });
-    players.forEach(function(prePlayer) {
-        prePlayer.x = positionX;
-        positionX += 100;
-    });
-    selector.render();
-}
+var renderEntities = function () {
+	/* Loop through all of the objects within the allEnemies array and call
+	* the render function you have defined.  
+	*/
+	if (status == "onGame") {
+		renderEnemy();
+		player.render();
+	} else if (status == "selectPlayer") {
+		renderPrePlayers();
+	}
 }
 
-
+var reviveEnemy = function () {
+	var positionY = 60;
+        allEnemies.forEach(function(enemy) {
+            enemy.revive(positionY);
+            positionY += 83;
+        });
+}
 
 var checkHeal = function () {
-    if(player.heal ==0){
+    if(player.heal == 0){
         renderGameOver();
         checkRecord();
         status = "gameOver";
-		//gameOver = true;
     }
 }
 
 var getRecord = function () {
     if (window.localStorage.getItem('record')) {
         record = window.localStorage.getItem('record');
+		playerRecord = window.localStorage.getItem('playerRecord');
     }
     else {
         record = 0;
+		playerRecord = "";
     }
 }
 
@@ -308,18 +310,18 @@ var checkRecord = function() {
         record = player.score;
         window.localStorage.setItem('record', record);
         alert("You broke the record! Congrulations!")
+		playerRecord = prompt("Please enter your name.");
+		while ((playerRecord.length > 10 || playerRecord.length =="")) {
+			playerRecord = prompt("Please enter your name. 10 max and 1 min.");
+		}
+		window.localStorage.setItem('playerRecord', playerRecord);
     }
 }
 
 var checkVictory = function() {
     if (player.y < 60) {
-        alert("Victory!");
-        var positionY = 60;
-        allEnemies.forEach(function(enemy) {
-            enemy.revive(positionY);
-            positionY += 83;
-        });
-        player.revive();
+        reviveEnemy();
+		player.revive();
         player.score++;
     }
 }
@@ -327,14 +329,9 @@ var checkVictory = function() {
 var checkCollisions = function() {
     allEnemies.forEach(function(enemy) {
         if (player.y == enemy.y && ((player.x > enemy.x && player.x < (enemy.x+81)) || ((player.x+81) < (enemy.x+81) && (player.x+81) > enemy.x))) {
-            alert ("colision");
-            var positionY = 60;
-            allEnemies.forEach(function(enemy) {
-                enemy.revive(positionY);
-                positionY += 83;
-            });
+            reviveEnemy();
+			player.revive();
             player.heal -= 1;
-            player.revive();
         }
     });
 }
@@ -343,25 +340,17 @@ var checkCollisions = function() {
 * handle game reset states - maybe a new game menu or a game over screen
 * those sorts of things. It's only called once by the init() method.
 */
-document.addEventListener('keyup', function(e) {
-    var allowedKeys = {
-        113: 'f2'
-    };
-    if (allowedKeys[e.keyCode] == "f2") {
-        reset();
-    }
-});
 
-function reset() {
+reset = function () {
 	status = "selectPlayer";
     player.reset();
 	selector.reset();
-    var positionY = 60;
-    allEnemies.forEach(function(enemy) {
-        enemy.revive(positionY);
-        positionY += 83;
-    });
+    reviveEnemy();
 };
+
+
+
+
 
 
 
