@@ -15,61 +15,62 @@
 */
 
 var Engine = (function(global) {
-/* Predefine the variables we'll be using within this scope,
-* create the canvas element, grab the 2D context for that canvas
-* set the canvas elements height/width and add it to the DOM.
-*/
+    /* Predefine the variables we'll be using within this scope,
+    * create the canvas element, grab the 2D context for that canvas
+    * set the canvas elements height/width and add it to the DOM.
+    */
 
-var doc = global.document,
-win = global.window,
-lastTime;
+    var doc = global.document,
+    win = global.window,
+    lastTime;
 
-canvas = doc.createElement('canvas'),
-ctx = canvas.getContext('2d'),
-status = "selectPlayer",
-record = "";
-playerRecord = "";
-
-
-canvas.width = 505;
-canvas.height = 707;
-doc.body.appendChild(canvas);
-
-/* This function serves as the kickoff point for the game loop itself
-* and handles properly calling the update and render methods.
-*/
-
-function main() {
-/* Get our time delta information which is required if your game
-* requires smooth animation. Because everyone's computer processes
-* instructions at different speeds we need a constant value that
-* would be the same for everyone (regardless of how fast their
-* computer is) - hurray time!
-*/
-var now = Date.now(),
-dt = (now - lastTime) / 1000.0;
-
-/* Call our update/render functions, pass along the time delta to
-* our update function since it may be used for smooth animation.
-*/
+    canvas = doc.createElement('canvas'),
+    ctx = canvas.getContext('2d'),
+    status = "selectPlayer",
+    record = "";
+    playerRecord = "";
 
 
-getRecord();
-update(dt);
-check();
-render();
+    canvas.width = 505;
+    canvas.height = 707;
+    doc.body.appendChild(canvas);
+
+    /* This function serves as the kickoff point for the game loop itself
+    * and handles properly calling the update and render methods.
+    */
+
+    main = function () {
+    /* Get our time delta information which is required if your game
+    * requires smooth animation. Because everyone's computer processes
+    * instructions at different speeds we need a constant value that
+    * would be the same for everyone (regardless of how fast their
+    * computer is) - hurray time!
+    */
+    var now = Date.now(),
+    dt = (now - lastTime) / 1000.0;
+
+    /* Call our update/render functions, pass along the time delta to
+    * our update function since it may be used for smooth animation.
+    */
 
 
-/* Set our lastTime variable which is used to determine the time delta
-* for the next time this function is called.
-*/
-lastTime = now;
+    getRecord();
+    //if (status != "pause") {
+        update(dt);
+        check();
+        render();
+    //}
 
-/* Use the browser's requestAnimationFrame function to call this
-* function again as soon as the browser is able to draw another frame.
-*/
+    /* Set our lastTime variable which is used to determine the time delta
+    * for the next time this function is called.
+    */
+    lastTime = now;
 
-win.requestAnimationFrame(main);
+    /* Use the browser's requestAnimationFrame function to call this
+    * function again as soon as the browser is able to draw another frame.
+    */
+
+    win.requestAnimationFrame(main);
 
 }
 
@@ -99,7 +100,7 @@ function update(dt) {
 function check() {
     checkCollisions();
     checkVictory();
-	checkHeal();
+    checkHeal();
 }
 /* This is called by the update function and loops through all of the
 * objects within your allEnemies array as defined in app.js and calls
@@ -110,16 +111,16 @@ function check() {
 */
 
 function updateEntities(dt) {
-	
+
     if (status == "onGame") {
-		allEnemies.forEach(function(enemy) {
+        allEnemies.forEach(function(enemy) {
             enemy.update(dt);
         });
-		player.update();
+        player.update();
     }
-	else if (status == "selectPlayer") {
-		selector.update();
-	}
+    else if (status == "selectPlayer") {
+        selector.update();
+    }
 }
 
 /* This function initially draws the "game level", it will then call
@@ -167,32 +168,36 @@ renderEntities();
 renderText();
 
 }
- 
+
 var renderText = function () {
-	renderInformation();
-	if (status == "selectPlayer") {
-		renderChoose();    
-	}
-	else if (status == "onGame") {
-		renderScore();
-	}
-	else if (status == "gameOver") {
-		renderGameOver();
-	}
+    renderInformation();
+    if (status == "selectPlayer") {
+        renderChoose();
+    }
+    else if (status == "onGame") {
+        renderScore();
+    }
+    else if (status == "gameOver") {
+        renderGameOver();
+    }
+    else if (status == "pause") {
+        renderScore();
+        renderPause();
+    }
 }
 
 var renderPrePlayers = function() {
-	var positionX = 0;
-	selector.render();
+    var positionX = 0;
+    selector.render();
     players.forEach(function(prePlayer) {
-		prePlayer.x = positionX;
+        prePlayer.x = positionX;
         prePlayer.render();
-		positionX += 100;
+        positionX += 100;
     });
 }
 
 var renderEnemy = function () {
-	allEnemies.forEach(function(enemy) {
+    allEnemies.forEach(function(enemy) {
         enemy.render();
     });
 }
@@ -207,21 +212,31 @@ var renderChoose = function() {
     ctx.fillText("Choose your hero!", 252, 300);
 }
 
+var renderPause = function() {
+    ctx.font = "50px Arial";
+    ctx.textAlign = "center";
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 3;
+    ctx.strokeText("Game paused!", 252, 300);
+    ctx.fillStyle = "white";
+    ctx.fillText("Game paused!", 252, 300);
+}
+
 var renderInformation = function () {
-        
+
     ctx.font = "25px Arial";
-	ctx.textAlign = "left";
-	ctx.strokeStyle = "black";
+    ctx.textAlign = "left";
+    ctx.strokeStyle = "black";
     ctx.lineWidth = 3;
     ctx.strokeText("Record: "+record, 0, 75);
     ctx.fillStyle = "white";
     ctx.fillText("Record: "+record, 0, 75);
-	ctx.strokeStyle = "black";
+    ctx.strokeStyle = "black";
     ctx.lineWidth = 3;
     ctx.strokeText("Player: "+playerRecord, 0, 100);
     ctx.fillStyle = "white";
     ctx.fillText("Player: "+playerRecord, 0, 100);
-	ctx.strokeStyle = "black";
+    ctx.strokeStyle = "black";
     ctx.lineWidth = 3;
     ctx.strokeText("Player: "+playerRecord, 0, 100);
     ctx.fillStyle = "white";
@@ -229,16 +244,16 @@ var renderInformation = function () {
 }
 
 var renderScore = function () {
-	score = player.score;
-	life = player.heal;
-	ctx.font = "50px Arial";
+    score = player.score;
+    life = player.heal;
+    ctx.font = "50px Arial";
     ctx.textAlign = "center";
     ctx.strokeStyle = "black";
     ctx.lineWidth = 3;
     ctx.strokeText("Score: "+score, 400, 100);
     ctx.fillStyle = "white";
     ctx.fillText("Score: "+score, 400, 100);
-	ctx.font = "25px Arial";
+    ctx.font = "25px Arial";
     ctx.textAlign = "left";
     ctx.strokeStyle = "black";
     ctx.lineWidth = 3;
@@ -253,13 +268,13 @@ var renderGameOver = function () {
     ctx.strokeStyle = "black";
     ctx.lineWidth = 3;
     ctx.strokeText("Game Over!", 252, 300);
-	ctx.strokeText("Your Score is: "+ player.score, 252, 350);
+    ctx.strokeText("Your Score is: "+ player.score, 252, 350);
     ctx.strokeText("F2 for new game!", 252, 400);
 
     ctx.fillStyle = "white";
     ctx.fillText("Game Over!", 252, 300);
     ctx.fillText("Your Score is: "+ player.score, 252, 350);
-	ctx.fillText("F2 for new game!", 252, 400);
+    ctx.fillText("F2 for new game!", 252, 400);
 }
 
 /* This function is called by the render function and is called on each game
@@ -267,23 +282,23 @@ var renderGameOver = function () {
 * on your enemy and player entities within app.js
 */
 var renderEntities = function () {
-	/* Loop through all of the objects within the allEnemies array and call
-	* the render function you have defined.  
-	*/
-	if (status == "onGame") {
-		renderEnemy();
-		player.render();
-	} else if (status == "selectPlayer") {
-		renderPrePlayers();
-	}
+/* Loop through all of the objects within the allEnemies array and call
+* the render function you have defined.
+*/
+if (status == "onGame" || status == "pause") {
+    renderEnemy();
+    player.render();
+} else if (status == "selectPlayer") {
+    renderPrePlayers();
+}
 }
 
 var reviveEnemy = function () {
-	var positionY = 60;
-        allEnemies.forEach(function(enemy) {
-            enemy.revive(positionY);
-            positionY += 83;
-        });
+    var positionY = 60;
+    allEnemies.forEach(function(enemy) {
+        enemy.revive(positionY);
+        positionY += 83;
+    });
 }
 
 var checkHeal = function () {
@@ -297,11 +312,11 @@ var checkHeal = function () {
 var getRecord = function () {
     if (window.localStorage.getItem('record')) {
         record = window.localStorage.getItem('record');
-		playerRecord = window.localStorage.getItem('playerRecord');
+        playerRecord = window.localStorage.getItem('playerRecord');
     }
     else {
         record = 0;
-		playerRecord = "";
+        playerRecord = "";
     }
 }
 
@@ -310,18 +325,18 @@ var checkRecord = function() {
         record = player.score;
         window.localStorage.setItem('record', record);
         alert("You broke the record! Congrulations!")
-		playerRecord = prompt("Please enter your name.");
-		while ((playerRecord.length > 10 || playerRecord.length =="")) {
-			playerRecord = prompt("Please enter your name. 10 max and 1 min.");
-		}
-		window.localStorage.setItem('playerRecord', playerRecord);
+        playerRecord = prompt("Please enter your name.");
+        while ((playerRecord.length > 10 || playerRecord.length =="")) {
+            playerRecord = prompt("Please enter your name. 10 max and 1 min.");
+        }
+        window.localStorage.setItem('playerRecord', playerRecord);
     }
 }
 
 var checkVictory = function() {
     if (player.y < 60) {
         reviveEnemy();
-		player.revive();
+        player.revive();
         player.score++;
     }
 }
@@ -330,7 +345,7 @@ var checkCollisions = function() {
     allEnemies.forEach(function(enemy) {
         if (player.y == enemy.y && ((player.x > enemy.x && player.x < (enemy.x+81)) || ((player.x+81) < (enemy.x+81) && (player.x+81) > enemy.x))) {
             reviveEnemy();
-			player.revive();
+            player.revive();
             player.heal -= 1;
         }
     });
@@ -342,9 +357,9 @@ var checkCollisions = function() {
 */
 
 reset = function () {
-	status = "selectPlayer";
+    status = "selectPlayer";
     player.reset();
-	selector.reset();
+    selector.reset();
     reviveEnemy();
 };
 

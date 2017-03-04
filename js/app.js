@@ -1,35 +1,40 @@
-var speeds = [100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320,+
-340, 360, 400, 420, 440, 460];
+var speeds = [100, 120, 140, 160, 180, 200, 220, 240, 260, +
+280, 300, 320, 340, 360, 400, 420, 440, 460];
 var player;
-// Enemies our player must avoid
+
+// Enemy 'class'
 var Enemy = function(enemyX, enemyY) {
-// Variables applied to each of our instances go here,
-this.x = enemyX;
-this.y = enemyY;
-this.speed = this.selectSpeed();
-// we've provided one for you to get started
-// The image/sprite for our enemies, this uses
-// a helper we've provided to easily load images
-this.sprite = 'images/enemy-bug.png';
-};
+    // Variable for enemy position x
+    this.x = enemyX;
+    // Variable for enemy position y
+    this.y = enemyY;
+    // Variable for enemy speed
+    this.speed = this.selectSpeed();
+    // we've provided one for you to get started
+    // The image/sprite for our enemies, this uses
+    // a helper we've provided to easily load images
+    this.sprite = 'images/enemy-bug.png';
+}
 
-// Update the enemy's position, required method for game
-// Parameter: dt, a time delta between ticks
 
+// Method for random speed and return value.
 Enemy.prototype.selectSpeed = function () {
     this.speedSelector = Math.round(Math.random()*17);
     return speeds[this.speedSelector];
 }
 
+
+// Update the enemy's position, required method for game
+// Parameter: dt, a time delta between ticks
 Enemy.prototype.update = function(dt) {
-// You should multiply any movement by the dt parameter
-// which will ensure the game runs at the same speed for
-// all computers.
-this.x += this.speed * dt;
-if(this.x > 800) {
-    this.x = -101;
-    this.speed = this.selectSpeed();
-}
+    // You should multiply any movement by the dt parameter
+    // which will ensure the game runs at the same speed for
+    // all computers.
+    this.x += this.speed * dt;
+    if(this.x > 800) {
+        this.x = -101;
+        this.speed = this.selectSpeed();
+    }
 };
 
 // Draw the enemy on the screen, required method for game
@@ -37,34 +42,42 @@ Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
+// Reset enemy position and speed.
 Enemy.prototype.revive = function(position) {
     this.y = position;
+    this.speed = this.selectSpeed();
     this.x = -100;
 }
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
-
-
+// Player class
 var Player = function (posX, posY, player) {
+    // Variable define numbers of colisions for game over
     this.heal = 2;
+    // Variable for player score
     this.score = 0;
+    // Variable for player position x
     this.x = posX;
+    // Variable for player position y
     this.y = posY;
+    // Variable for player image
     this.sprite = 'images/'+player+'.png';
 };
 
+// Method reset number of colisions for game over and player score
 Player.prototype.reset = function() {
     player.heal = 2;
     player.score = 0;
 }
 
+// Method define initial position for player object
 Player.prototype.revive = function() {
     this.x = 200;
     this.y = 475;
 }
 
+// Method for choice image for player object,
+// change status of game to 'onGame',
+// and define player position x to initial position
 Player.prototype.select = function(x) {
     if (x>=0 && x<100){
         player = player1;
@@ -81,28 +94,27 @@ Player.prototype.select = function(x) {
     else if (x>=400 && x<500) {
         player = player5;
     }
-	reset();
     status = "onGame";
     player.x = 200;
 }
 
-Player.prototype.update = function(dt) {
-// You should multiply any movement by the dt parameter
-// which will ensure the game runs at the same speed for
-// all computers.
 
-if(this.x < 0){
-    this.x = 0;
-}
-else if(this.x >400){
-    this.x = 400;
-}
-else if(this.y < 0){
-    this.y = 0;
-}
-else if(this.y > 475){
-    this.y = 475;
-}
+Player.prototype.update = function(dt) {
+    // You should multiply any movement by the dt parameter
+    // which will ensure the game runs at the same speed for
+    // all computers.
+    if(this.x < 0){
+        this.x = 0;
+    }
+    else if(this.x >400){
+        this.x = 400;
+    }
+    else if(this.y < 0){
+        this.y = 0;
+    }
+    else if(this.y > 475){
+        this.y = 475;
+    }
 
 };
 
@@ -112,23 +124,23 @@ Player.prototype.render = function() {
 };
 
 Player.prototype.handleInput = function(key) {
-		switch (key) {
-            case "left":
-            this.x = this.x-100
-            break;
+    switch (key) {
+        case "left":
+        this.x = this.x-100
+        break;
 
-            case "right":
-            this.x = this.x+100;
-            break;
+        case "right":
+        this.x = this.x+100;
+        break;
 
-            case "up":
-            this.y = this.y-83;
-            break;
+        case "up":
+        this.y = this.y-83;
+        break;
 
-            case "down":
-            this.y = this.y+83;
-            break;
-        }
+        case "down":
+        this.y = this.y+83;
+        break;
+    }
 };
 
 var Selector = function () {
@@ -183,19 +195,19 @@ Selector.prototype.select = function(x) {
 }
 
 Selector.prototype.update = function(dt) {
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers.
-    if(this.x < 0) {
-        this.x = 0;
-    }
-    else if(this.x >400) {
-        this.x = 400;
-    }
+// You should multiply any movement by the dt parameter
+// which will ensure the game runs at the same speed for
+// all computers.
+if(this.x < 0) {
+    this.x = 0;
+}
+else if(this.x >400) {
+    this.x = 400;
+}
 };
 
 Selector.prototype.reset = function() {
-	this.x = 200;
+    this.x = 200;
 };
 
 // Now instantiate your objects.
@@ -232,10 +244,20 @@ document.addEventListener('keyup', function(e) {
         39: 'right',
         40: 'down',
         32: 'space',
-		113: 'f2'
+        113: 'f2',
+        115: 'f4'
     };
-	if (allowedKeys[e.keyCode] == "f2") {
+    if (allowedKeys[e.keyCode] == "f2") {
         reset();
+    }
+    else if (allowedKeys[e.keyCode] == "f4") {
+        if (status == "onGame") {
+            status = "pause";
+        }
+        else if (status == "pause") {
+            status = "onGame";
+            main();
+        }
     }
     if(status == "onGame") {
         player.handleInput(allowedKeys[e.keyCode]);
@@ -251,7 +273,7 @@ document.addEventListener('click', function() {
     x = event.clientX - rect.left;
     y = event.clientY - rect.top;
     if (status == "selectPlayer" && y > 550 && y < 633&& x > 0 && x < 500) {
-		player.select(x);
+        player.select(x);
     }
 });
 
